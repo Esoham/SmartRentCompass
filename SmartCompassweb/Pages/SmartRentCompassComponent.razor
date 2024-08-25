@@ -1,0 +1,115 @@
+﻿@page "/smartrentcompass"
+@using SmartRentCompass
+@inject SmartRentCompass compass
+
+<h3>Smart Rent Compass</h3>
+
+<div>
+    <h4>Search Apartments</h4>
+    <EditForm Model="@searchCriteria" OnValidSubmit="@HandleSearch">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <InputNumber @bind-Value="searchCriteria.MinPrice" class="form-control" placeholder="Min Price" />
+        <InputNumber @bind-Value="searchCriteria.MaxPrice" class="form-control" placeholder="Max Price" />
+        <InputNumber @bind-Value="searchCriteria.MinBedrooms" class="form-control" placeholder="Min Bedrooms" />
+        <InputText @bind-Value="searchCriteria.City" class="form-control" placeholder="City" />
+        <InputText @bind-Value="searchCriteria.State" class="form-control" placeholder="State" />
+        <button type="submit" class="btn btn-primary">Search</button>
+    </EditForm>
+</div>
+
+@if (searchResults != null && searchResults.Any())
+{
+    <div>
+        <h4>Search Results</h4>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Bedrooms</th>
+                    <th>City</th>
+                    <th>State</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var apartment in searchResults)
+                {
+                    <tr>
+                        <td>@apartment.Name</td>
+                        <td>@apartment.Price.ToString("C")</td>
+                        <td>@apartment.Bedrooms</td>
+                        <td>@apartment.City</td>
+                        <td>@apartment.State</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    private SearchCriteria searchCriteria = new SearchCriteria();
+    private List<Apartment>? searchResults;
+
+    protected override void OnInitialized()
+    {
+        // Initialize with some sample data
+        compass.AddApartment(new Apartment
+        {
+            Id = "1",
+            Name = "Sunny Apartments",
+            Price = 1000,
+            Bedrooms = 2,
+            City = "Sunnyville",
+            State = "CA",
+            Address = "123 Sunny St",
+            Bathrooms = 1,
+            SquareFeet = 800,
+            Amenities = new List<string> { "Pool", "Gym" },
+            Latitude = 34.0522,
+            Longitude = -118.2437
+        });
+        compass.AddApartment(new Apartment
+        {
+            Id = "2",
+            Name = "Moon View Lofts",
+            Price = 1500,
+            Bedrooms = 3,
+            City = "Moontown",
+            State = "NY",
+            Address = "456 Moon Ave",
+            Bathrooms = 2,
+            SquareFeet = 1200,
+            Amenities = new List<string> { "Rooftop Terrace", "Parking" },
+            Latitude = 40.7128,
+            Longitude = -74.0060
+        });
+        // Add more sample apartments as needed
+    }
+
+    private void HandleSearch()
+    {
+        var user = new User
+        {
+            Preferences = new Dictionary<string, object>
+            {
+                ["minPrice"] = searchCriteria.MinPrice,
+                ["maxPrice"] = searchCriteria.MaxPrice,
+                ["minBedrooms"] = searchCriteria.MinBedrooms,
+                ["city"] = searchCriteria.City ?? string.Empty,
+                ["state"] = searchCriteria.State ?? string.Empty
+            }
+        };
+        searchResults = compass.SearchApartments(user);
+    }
+
+    private class SearchCriteria
+    {
+        public decimal MinPrice { get; set; }
+        public decimal MaxPrice { get; set; }
+        public int MinBedrooms { get; set; }
+        public string? City { get; set; }
+        public string? State { get; set; }
+    }
+}
